@@ -28,7 +28,7 @@ message ListTaskRequest {
 }
 
 message ListTaskResponse {
-	repeated Task List= 1;
+	repeated TaskModel List= 1;
 }
 
 message ExecuteTaskRequest {
@@ -74,7 +74,7 @@ enum TaskFilter {
 	TF_URGENT = 3;
 }
 
-message Task {
+message TaskModel {
 	optional int32 Id = 1;
 	optional string Title = 2;
 	optional string Content = 3;
