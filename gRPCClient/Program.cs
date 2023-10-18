@@ -117,56 +117,85 @@ while (true)
                         else
                         {
                             Console.WriteLine($"Erro ao tentar executar a Tarefa ID: {taskId}");
+                            Console.WriteLine("Aperte qualquer tecla para continuar...");
+                            Console.ReadKey();
+                            Console.Clear();
                         }
                     }
                 }
                 catch (RpcException ex)
                 {
-                    Console.WriteLine($"Erro ao tentar executar uma tarefa: {ex.Message}");
+                    Console.WriteLine($"Erro ao tentar carregar as tarefas: {ex.Message}");
                 }
                 
                 break;
 
             case 4:
                 Console.Clear();
-                Console.Write("ID da Tarefa a ser finalizada: ");
-                if (int.TryParse(Console.ReadLine(), out int finalizeTaskId))
+                try
                 {
-                    var finalizeResponse = await client.FinalizeTaskAsync(new FinalizeTaskRequest
+                    Console.Write("ID da Tarefa a ser finalizada: ");
+                    if (int.TryParse(Console.ReadLine(), out int finalizeTaskId))
                     {
-                        TaskId = finalizeTaskId
-                    });
+                        var finalizeResponse = await client.FinalizeTaskAsync(new FinalizeTaskRequest
+                        {
+                            TaskId = finalizeTaskId
+                        });
 
-                    if (finalizeResponse.Error == 0)
-                    {
-                        Console.WriteLine($"Tarefa ID: {finalizeTaskId} finalizada com sucesso!");
-                    }
-                    else
-                    {
-                        Console.WriteLine($"Erro ao finalizar a Tarefa ID: {finalizeTaskId}");
+                        if (finalizeResponse.Error == 0)
+                        {
+                            Console.WriteLine($"Tarefa ID: {finalizeTaskId} finalizada com sucesso!\n");
+
+                            Console.WriteLine("Aperte qualquer tecla para continuar...");
+                            Console.ReadKey();
+                            Console.Clear();
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Erro ao finalizar a Tarefa ID: {finalizeTaskId}");
+                        }
                     }
                 }
+                catch (RpcException ex)
+                {
+                    Console.WriteLine($"Erro ao tentar finalizar a tarefa: {ex.Message}");
+                }
+                
                 break;
 
             case 5:
                 Console.Clear();
-                Console.Write("ID da Tarefa a ser removida: ");
-                if (int.TryParse(Console.ReadLine(), out int removeTaskId))
-                {
-                    var removeResponse = await client.RemoveTaskAsync(new RemoveTaskRequest
-                    {
-                        TaskId = removeTaskId
-                    });
 
-                    if (removeResponse.Error == 0)
+                try
+                {
+                    Console.Write("ID da Tarefa a ser removida: ");
+                    if (int.TryParse(Console.ReadLine(), out int removeTaskId))
                     {
-                        Console.WriteLine($"Tarefa ID: {removeTaskId} removida com sucesso!");
+                        var removeResponse = await client.RemoveTaskAsync(new RemoveTaskRequest
+                        {
+                            TaskId = removeTaskId
+                        });
+
+                        if (removeResponse.Error == 0)
+                        {
+                            Console.WriteLine($"Tarefa ID: {removeTaskId} removida com sucesso!");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Erro ao remover a Tarefa ID: {removeTaskId}");
+                        }
+                        Console.WriteLine("Aperte qualquer tecla para continuar...");
+                        Console.ReadKey();
+                        Console.Clear();
                     }
-                    else
-                    {
-                        Console.WriteLine($"Erro ao remover a Tarefa ID: {removeTaskId}");
-                    }
+
                 }
+                catch (RpcException ex)
+                {
+                    Console.WriteLine($"Erro ao tentar remover a tarefa: {ex.Message}");
+                }
+
+                
                 break;
 
             case 6:
