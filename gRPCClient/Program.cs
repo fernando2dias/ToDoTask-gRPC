@@ -1,4 +1,5 @@
-﻿using Grpc.Net.Client;
+﻿using Grpc.Core;
+using Grpc.Net.Client;
 using GrpcServer;
 using System;
 using System.Threading.Tasks;
@@ -27,6 +28,7 @@ while (true)
         switch (choice)
         {
             case 1:
+                Console.Clear();
                 Console.Write("\nTítulo da Tarefa: ");
                 string title = Console.ReadLine();
                 
@@ -41,29 +43,59 @@ while (true)
                 Console.Write("\nOpção: ");
 
                 var p = Int32.TryParse(Console.ReadLine(),out var priority);
-               
-                var createResponse = await client.CreateTaskAsync(new CreateTaskRequest
+                try
                 {
-                    Title = title,
-                    Content = content,
-                    Tag = (TaskPriority)priority
-                });
+                    var createResponse = await client.CreateTaskAsync(new CreateTaskRequest
+                    {
+                        Title = title,
+                        Content = content,
+                        Tag = (TaskPriority)priority
+                    });
 
-                Console.WriteLine($"\nTarefa criada com ID: {createResponse.TaskId}\n");
-                await channel.ShutdownAsync();
+                    Console.WriteLine($"\nTarefa criada com ID: {createResponse.TaskId}\n");
+                    await channel.ShutdownAsync();
+                }
+                catch (RpcException ex)
+                {
+                    Console.WriteLine($"Erro ao tentar criar uma tarefa: {ex.Message}" );
+                }
+                
+                Console.WriteLine("Aperte qualquer tecla para continuar...");
+                Console.ReadKey();
+                Console.Clear();
+
                 break;
 
             case 2:
-                var listResponse = await client.ListTaskAsync(new ListTaskRequest());
-                Console.WriteLine("\nLista de Tarefas:");
-                foreach (var task in listResponse.List)
+                Console.Clear();
+
+                try
                 {
-                    Console.WriteLine($"ID: {task.Id}\n Título: {task.Title}\n Prioridade: {GetPriority(task.Tag.ToString())}\n");
-                    Console.WriteLine("");
+                    var listResponse = await client.ListTaskAsync(new ListTaskRequest());
+
+                    Console.WriteLine("----------------------");
+                    Console.WriteLine("   Lista de Tarefas   ");
+                    Console.WriteLine("----------------------");
+
+                    foreach (var task in listResponse.List)
+                    {
+                        Console.WriteLine($"ID:{task.Id}\nTítulo: {task.Title}\nPrioridade: {GetPriority(task.Tag.ToString())}");
+                        Console.WriteLine("----------------------");
+                    }
+
                 }
+                catch (RpcException ex)
+                {
+                    Console.WriteLine($"Erro ao tentar carregar as tarefas: {ex.Message}");
+                }
+                
+                Console.WriteLine("Aperte qualquer tecla para continuar...");
+                Console.ReadKey();
+                Console.Clear();
                 break;
 
             case 3:
+                Console.Clear();
                 Console.Write("ID da Tarefa a ser executada: ");
                 if (int.TryParse(Console.ReadLine(), out int taskId))
                 {
@@ -84,6 +116,7 @@ while (true)
                 break;
 
             case 4:
+                Console.Clear();
                 Console.Write("ID da Tarefa a ser finalizada: ");
                 if (int.TryParse(Console.ReadLine(), out int finalizeTaskId))
                 {
@@ -104,6 +137,7 @@ while (true)
                 break;
 
             case 5:
+                Console.Clear();
                 Console.Write("ID da Tarefa a ser removida: ");
                 if (int.TryParse(Console.ReadLine(), out int removeTaskId))
                 {
@@ -147,39 +181,5 @@ string GetPriority(string p)
 }
 
 
-
-//async void CreateTask()
-//{
-//    string title = "";
-//    string description = "";
-//    int priority = 0;
-//    TaskPriority _taskPriority;
-
-//    Console.Write("Escreva o Titulo da Tarefa: ");
-//    title = Console.ReadLine();
-
-//    Console.Write("Escreva a descriçao da tarefa: ");
-//    description = Console.ReadLine();
-
-//    Console.WriteLine("\nDigite uma opçao para definir a prioridade: " );
-//    Console.WriteLine("0 - Prioridade baixa");
-//    Console.WriteLine("1 - Prioridade normal");
-//    Console.WriteLine("2 - Prioridade alta");
-//    Console.Write("Opçao: ");
-//    do { 
-//        priority = Int32.Parse(Console.ReadLine());
-//    }while(priority != 0 && priority != 1 && priority != 2);
-
-//    var createResponse = await client.CreateTaskAsync(
-
-//    new CreateTaskRequest
-//    {
-//        Title = title,
-//        Content = description,
-//        Tag = (TaskPriority)priority
-//    });
-
-
-//}
 
 
