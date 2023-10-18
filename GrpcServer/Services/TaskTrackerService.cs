@@ -7,8 +7,8 @@ namespace GrpcServer.Services
 {
     public class TaskTrackerService : TaskTracker.TaskTrackerBase
     {
-        private List<TaskModel> tasks = new List<TaskModel>();
-        private int taskIdCounter = 1;
+        private static List<TaskModel> tasks = new List<TaskModel>();
+        private static int taskIdCounter = 1;
         private readonly ILogger<TaskTrackerService> _logger;
 
 
@@ -25,11 +25,12 @@ namespace GrpcServer.Services
                 Id = taskIdCounter++,
                 Title = request.Title,
                 Content = request.Content,
-                 Tag = request.Tag,
+                Tag = request.Tag,
                 Created = Timestamp.FromDateTime(DateTime.UtcNow)
             };
 
             tasks.Add(newTask);
+            _logger.LogInformation($"Task {newTask.Id} created");
 
             return Task.FromResult(new CreateTaskResponse { TaskId = newTask.Id });
 
@@ -37,54 +38,65 @@ namespace GrpcServer.Services
 
         public override Task<ListTaskResponse> ListTask(ListTaskRequest request, ServerCallContext context)
         {
-            var response = tasks.ToList();
-            //depois vou tentar filtrar por prioridade
+            //  var filteredTasks = tasks.Where(task =>
+            // (request.Q == TaskQueue.TqTodo && task.Tag == TaskPriority.TpUrgent) ||
+            // (request.Q == TaskQueue.TqDoing && task.Tag == TaskPriority.TpPriority) ||
+            // (request.Q == TaskQueue.TqTodo && task.Tag == TaskPriority.TpCommon)).ToList();
 
-            return Task.FromResult(new ListTaskResponse { List = { tasks } });
-        }
-
-        public override Task<ExecuteTaskResponse> ExecuteTask(ExecuteTaskRequest request, ServerCallContext context)
-        {
-            var task = tasks.FirstOrDefault(t => t.Id == request.TaskId);
-
-            if (task == null)
+            var response = new ListTaskResponse();
+            foreach (var task in tasks)
             {
-                return Task.FromResult(new ExecuteTaskResponse { Error = -1 });
+                response.List.Add(task);
             }
 
-           // vai executar algo?
-
-            return Task.FromResult(new ExecuteTaskResponse { Error = 0 });
+            return Task.FromResult(response);
         }
+        //var response = tasks.ToList();
+        ////depois vou tentar filtrar por prioridade
 
-        public override Task<FinalizeTaskResponse> FinalizeTask(FinalizeTaskRequest request, ServerCallContext context)
+        //return Task.FromResult(new ListTaskResponse { List = { tasks } });
+    //}
+
+    public override Task<ExecuteTaskResponse> ExecuteTask(ExecuteTaskRequest request, ServerCallContext context)
+    {
+        var task = tasks.FirstOrDefault(t => t.Id == request.TaskId);
+
+        if (task == null)
         {
-            var task = tasks.FirstOrDefault(t => t.Id == request.TaskId);
-
-            if (task == null)
-            {
-                return Task.FromResult(new FinalizeTaskResponse { Error = -1 });
-            }
-
-            Console.WriteLine($"Tarefa ID: {request.TaskId} foi finalizada com sucesso!");
-
-            return Task.FromResult(new FinalizeTaskResponse { Error = 0 });
+            return Task.FromResult(new ExecuteTaskResponse { Error = -1 });
         }
 
-        public override Task<RemoveTaskResponse> RemoveTask(RemoveTaskRequest request, ServerCallContext context)
-        {
-            var task = tasks.FirstOrDefault(t => t.Id == request.TaskId);
-
-            if (task == null)
-            {
-                return Task.FromResult(new RemoveTaskResponse { Error = -1 });
-            }
-
-            tasks.Remove(task);
-
-            return Task.FromResult(new RemoveTaskResponse { Error = 0 });
-        }
-
-
+        return Task.FromResult(new ExecuteTaskResponse { Error = 0 });
     }
+
+    public override Task<FinalizeTaskResponse> FinalizeTask(FinalizeTaskRequest request, ServerCallContext context)
+    {
+        var task = tasks.FirstOrDefault(t => t.Id == request.TaskId);
+
+        if (task == null)
+        {
+            return Task.FromResult(new FinalizeTaskResponse { Error = -1 });
+        }
+
+        Console.WriteLine($"Tarefa ID: {request.TaskId} foi finalizada com sucesso!");
+
+        return Task.FromResult(new FinalizeTaskResponse { Error = 0 });
+    }
+
+    public override Task<RemoveTaskResponse> RemoveTask(RemoveTaskRequest request, ServerCallContext context)
+    {
+        var task = tasks.FirstOrDefault(t => t.Id == request.TaskId);
+
+        if (task == null)
+        {
+            return Task.FromResult(new RemoveTaskResponse { Error = -1 });
+        }
+
+        tasks.Remove(task);
+
+        return Task.FromResult(new RemoveTaskResponse { Error = 0 });
+    }
+
+
+}
 }
