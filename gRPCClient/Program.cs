@@ -97,22 +97,34 @@ while (true)
             case 3:
                 Console.Clear();
                 Console.Write("ID da Tarefa a ser executada: ");
-                if (int.TryParse(Console.ReadLine(), out int taskId))
-                {
-                    var executeResponse = await client.ExecuteTaskAsync(new ExecuteTaskRequest
-                    {
-                        TaskId = taskId
-                    });
 
-                    if (executeResponse.Error == 0)
+                try
+                {
+                    if (int.TryParse(Console.ReadLine(), out int taskId))
                     {
-                        Console.WriteLine($"Tarefa: {taskId} estã sendo executada...");
-                    }
-                    else
-                    {
-                        Console.WriteLine($"Erro ao tentar executar a Tarefa ID: {taskId}");
+                        var executeResponse = await client.ExecuteTaskAsync(new ExecuteTaskRequest
+                        {
+                            TaskId = taskId
+                        });
+
+                        if (executeResponse.Error == 0)
+                        {
+                            Console.WriteLine($"Tarefa: {taskId} está sendo executada...\n");
+                            Console.WriteLine("Aperte qualquer tecla para continuar...");
+                            Console.ReadKey();
+                            Console.Clear();
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Erro ao tentar executar a Tarefa ID: {taskId}");
+                        }
                     }
                 }
+                catch (RpcException ex)
+                {
+                    Console.WriteLine($"Erro ao tentar executar uma tarefa: {ex.Message}");
+                }
+                
                 break;
 
             case 4:
