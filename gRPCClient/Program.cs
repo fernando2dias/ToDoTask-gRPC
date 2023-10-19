@@ -2,12 +2,16 @@
 using Grpc.Net.Client;
 using GrpcServer;
 using System;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using static System.Net.Mime.MediaTypeNames;
 
 
 var channel = GrpcChannel.ForAddress("https://localhost:7136");
 var client = new TaskTracker.TaskTrackerClient(channel);
-string[] tag = {"Baixa", "Normal", "Urgente"}; 
+string[] tag = {"Baixa", "Normal", "Urgente" };
+string[] filter = {"TF_ALL", "TF_COMMON", "TF_PRIORITY", "TF_URGENT"};
+
 
 while (true)
 {
@@ -30,7 +34,29 @@ while (true)
             case 1:
                 Console.Clear();
                 Console.Write("\nTítulo da Tarefa: ");
-                string title = Console.ReadLine();
+                string title;
+                string text;
+                int times = 0;
+                do
+                {
+                    if(times == 0)
+                    {
+                        text = Console.ReadLine();
+                        times++;
+                    }
+                    else
+                    {
+                        Console.Clear();
+                        Console.WriteLine("Você digitou algum caracter não suportado\nou acima de 20 caracteres.\nTente novamente!!!");
+                        Console.Write("\nTítulo da Tarefa: ");
+
+                        text = Console.ReadLine();
+                        times++;
+                    }
+                  
+                } while (TextValidate(text) && TextLengthValidate(text));
+                title = text;
+
                 
                 Console.Write("\nConteúdo da Tarefa: ");
                 string content = Console.ReadLine();
@@ -68,10 +94,30 @@ while (true)
 
             case 2:
                 Console.Clear();
+                Console.WriteLine("\nEscolha uma opção para definir um filtro de prioridade:");
+                Console.WriteLine("0 - Todas");
+                Console.WriteLine("1 - Comum");
+                Console.WriteLine("2 - Prioridade");
+                Console.WriteLine("3 - Urgente");
+
+                Console.Write("\nOpção: ");
+                var f = Int32.TryParse(Console.ReadLine(), out var taskFilter);
+
+                Console.Clear();
+                Console.WriteLine("\nEscolha uma opção de fila da tarefa:");
+                Console.WriteLine("0 - Para fazer");
+                Console.WriteLine("1 - Fazendo");
+                Console.WriteLine("2 - Finalizada");
+                Console.WriteLine("3 - Todas");
+
+                Console.Write("\nOpção: ");
+                var q = Int32.TryParse(Console.ReadLine(), out var taskQueue);
 
                 try
                 {
-                    var listResponse = await client.ListTaskAsync(new ListTaskRequest());
+                    var listResponse = await client.ListTaskAsync(new ListTaskRequest
+                                                                 {Filter=(TaskFilter)taskFilter, 
+                                                                 Q = (TaskQueue)taskQueue});
 
                     Console.WriteLine("----------------------");
                     Console.WriteLine("   Lista de Tarefas   ");
@@ -79,10 +125,9 @@ while (true)
 
                     foreach (var task in listResponse.List)
                     {
-                        Console.WriteLine($"ID:{task.Id}\nTítulo: {task.Title}\nPrioridade: {GetPriority(task.Tag.ToString())}");
+                        Console.WriteLine($"ID:{task.Id}\nTítulo: {task.Title}\nTag: {GetPriority(task.Tag.ToString())}");
                         Console.WriteLine("----------------------");
                     }
-
                 }
                 catch (RpcException ex)
                 {
@@ -216,11 +261,17 @@ while (true)
 
 string GetPriority(string p)
 {
-    if (p == "TpPriority") return "alta";
-    if (p == "TpUrgent") return "normal";
-    return "baixa";
+    if (p == "TpPriority") return "urgente";
+    if (p == "TpUrgent") return "prioridade";
+    return "comum";
 }
 
+bool TextValidate(string text)
+{
+    return (!Regex.IsMatch(text, "^[a-zA-Z0-9#\\$%&/]*$")) ? true : false;
+}
 
-
-
+bool TextLengthValidate(string text)
+{
+   return (text.Length >= 20) ? true : false;
+}

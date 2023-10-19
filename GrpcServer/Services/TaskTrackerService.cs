@@ -38,65 +38,97 @@ namespace GrpcServer.Services
 
         public override Task<ListTaskResponse> ListTask(ListTaskRequest request, ServerCallContext context)
         {
-            //  var filteredTasks = tasks.Where(task =>
-            // (request.Q == TaskQueue.TqTodo && task.Tag == TaskPriority.TpUrgent) ||
-            // (request.Q == TaskQueue.TqDoing && task.Tag == TaskPriority.TpPriority) ||
-            // (request.Q == TaskQueue.TqTodo && task.Tag == TaskPriority.TpCommon)).ToList();
-
             var response = new ListTaskResponse();
-            foreach (var task in tasks)
+
+            if (request.Filter == TaskFilter.TfAll)
             {
-                response.List.Add(task);
+                foreach (var task in tasks)
+                {
+                    if (request.Q != TaskQueue.TqTodo &&
+                       request.Q != TaskQueue.TqDone &&
+                       request.Q != TaskQueue.TqDoing
+                    )
+                    {
+                        response.List.Add(task);
+                    }
+                    else if (request.Q == TaskQueue.TqDone && task.Ended != null)
+                    {
+                        response.List.Add(task);
+                    }
+                    else if (request.Q == TaskQueue.TqDoing && task.Started != null) 
+                    {
+                        response.List.Add(task);
+                    }
+                    else if (request.Q == TaskQueue.TqTodo && task.Created != null) 
+                    {
+                        response.List.Add(task);
+                    }
+                }
+            }
+            else
+            {
+                foreach (var task in tasks)
+                {
+                    if (task.Tag == (TaskPriority)request.Filter - 1)
+                    {
+                        response.List.Add(task);
+                    }
+                }
             }
 
             return Task.FromResult(response);
         }
-        //var response = tasks.ToList();
-        ////depois vou tentar filtrar por prioridade
 
-        //return Task.FromResult(new ListTaskResponse { List = { tasks } });
-    //}
 
-    public override Task<ExecuteTaskResponse> ExecuteTask(ExecuteTaskRequest request, ServerCallContext context)
-    {
-        var task = tasks.FirstOrDefault(t => t.Id == request.TaskId);
-
-        if (task == null)
+        public override Task<ExecuteTaskResponse> ExecuteTask(ExecuteTaskRequest request, ServerCallContext context)
         {
-            return Task.FromResult(new ExecuteTaskResponse { Error = -1 });
+            var task = tasks.FirstOrDefault(t => t.Id == request.TaskId);
+
+            if (task == null)
+            {
+                return Task.FromResult(new ExecuteTaskResponse { Error = -1 });
+            }
+
+            task.Started = Timestamp.FromDateTime(DateTime.UtcNow);
+
+            return Task.FromResult(new ExecuteTaskResponse { Error = 0 });
         }
 
-        return Task.FromResult(new ExecuteTaskResponse { Error = 0 });
-    }
-
-    public override Task<FinalizeTaskResponse> FinalizeTask(FinalizeTaskRequest request, ServerCallContext context)
-    {
-        var task = tasks.FirstOrDefault(t => t.Id == request.TaskId);
-
-        if (task == null)
+        public override Task<FinalizeTaskResponse> FinalizeTask(FinalizeTaskRequest request, ServerCallContext context)
         {
-            return Task.FromResult(new FinalizeTaskResponse { Error = -1 });
+            var task = tasks.FirstOrDefault(t => t.Id == request.TaskId);
+
+            if (task == null)
+            {
+                return Task.FromResult(new FinalizeTaskResponse { Error = -1 });
+            }
+
+            if(task.Started == null) 
+            {
+                Console.WriteLine("A tarefa não foi iniciada ainda, portanto não pode ser finalizada!");
+                return Task.FromResult(new FinalizeTaskResponse { Error = -1 });
+            }
+
+            task.Ended = Timestamp.FromDateTime(DateTime.UtcNow);
+            Console.WriteLine($"Tarefa ID: {request.TaskId} foi finalizada com sucesso!");
+
+            return Task.FromResult(new FinalizeTaskResponse { Error = 0 });
         }
 
-        Console.WriteLine($"Tarefa ID: {request.TaskId} foi finalizada com sucesso!");
-
-        return Task.FromResult(new FinalizeTaskResponse { Error = 0 });
-    }
-
-    public override Task<RemoveTaskResponse> RemoveTask(RemoveTaskRequest request, ServerCallContext context)
-    {
-        var task = tasks.FirstOrDefault(t => t.Id == request.TaskId);
-
-        if (task == null)
+        public override Task<RemoveTaskResponse> RemoveTask(RemoveTaskRequest request, ServerCallContext context)
         {
-            return Task.FromResult(new RemoveTaskResponse { Error = -1 });
+            var task = tasks.FirstOrDefault(t => t.Id == request.TaskId);
+
+            if (task == null)
+            {
+                return Task.FromResult(new RemoveTaskResponse { Error = -1 });
+            }
+
+            tasks.Remove(task);
+
+            return Task.FromResult(new RemoveTaskResponse { Error = 0 });
         }
 
-        tasks.Remove(task);
 
-        return Task.FromResult(new RemoveTaskResponse { Error = 0 });
     }
-
-
-}
 }
