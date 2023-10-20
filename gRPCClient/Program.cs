@@ -10,7 +10,7 @@ using static System.Net.Mime.MediaTypeNames;
 var channel = GrpcChannel.ForAddress("https://localhost:7136");
 var client = new TaskTracker.TaskTrackerClient(channel);
 string[] tag = {"TODAS","COMUM", "PRIORIDADE", "URGENTE"};
-string[] filter = {"TF_ALL", "TF_COMMON", "TF_PRIORITY", "TF_URGENT"};
+//string[] filter = {"TF_ALL", "TF_COMMON", "TF_PRIORITY", "TF_URGENT"};
 string[] queue = {"PARA FAZER","FAZENDO","FINALIZADAS","TODAS"};
 
 while (true)
@@ -126,6 +126,10 @@ while (true)
                     Console.WriteLine($"Filtro de Fila: {queue[taskQueue]}");
                     Console.WriteLine("-----------------------------------");
 
+                    if(listResponse.List.Count == 0)
+                    {
+                        Console.WriteLine("Não existem tarefas cadastradas com esse filtro!\nTente novamente com outro filtro ou cadastre uma tarefa.\n");
+                    } 
                     foreach (var task in listResponse.List)
                     {
                         Console.WriteLine($"ID:{task.Id}\nTítulo: {task.Title}\nTag: {GetPriority(task.Tag.ToString())}");
