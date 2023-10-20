@@ -9,9 +9,9 @@ using static System.Net.Mime.MediaTypeNames;
 
 var channel = GrpcChannel.ForAddress("https://localhost:7136");
 var client = new TaskTracker.TaskTrackerClient(channel);
-string[] tag = {"Baixa", "Normal", "Urgente" };
+string[] tag = {"TODAS","COMUM", "PRIORIDADE", "URGENTE"};
 string[] filter = {"TF_ALL", "TF_COMMON", "TF_PRIORITY", "TF_URGENT"};
-
+string[] queue = {"PARA FAZER","FAZENDO","FINALIZADAS","TODAS"};
 
 while (true)
 {
@@ -62,9 +62,9 @@ while (true)
                 string content = Console.ReadLine();
                 
                 Console.WriteLine("\nEscolha uma opção para definir uma prioridade:");
-                Console.WriteLine("0 - Baixa prioridade");
-                Console.WriteLine("1 - Média prioridade");
-                Console.WriteLine("2 - Alta prioridade");
+                Console.WriteLine("0 - Comum");
+                Console.WriteLine("1 - Prioridade");
+                Console.WriteLine("2 - Urgente");
                 
                 Console.Write("\nOpção: ");
 
@@ -119,14 +119,17 @@ while (true)
                                                                  {Filter=(TaskFilter)taskFilter, 
                                                                  Q = (TaskQueue)taskQueue});
 
-                    Console.WriteLine("----------------------");
-                    Console.WriteLine("   Lista de Tarefas   ");
-                    Console.WriteLine("----------------------");
+                    Console.WriteLine("-----------------------------------");
+                    Console.WriteLine("**********Lista de Tarefas*********");
+                    Console.WriteLine("-----------------------------------");
+                    Console.WriteLine($"Filtro de Prioridade: {tag[taskFilter]}");
+                    Console.WriteLine($"Filtro de Fila: {queue[taskQueue]}");
+                    Console.WriteLine("-----------------------------------");
 
                     foreach (var task in listResponse.List)
                     {
                         Console.WriteLine($"ID:{task.Id}\nTítulo: {task.Title}\nTag: {GetPriority(task.Tag.ToString())}");
-                        Console.WriteLine("----------------------");
+                        Console.WriteLine("-----------------------------------");
                     }
                 }
                 catch (RpcException ex)

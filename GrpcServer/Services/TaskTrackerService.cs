@@ -55,11 +55,11 @@ namespace GrpcServer.Services
                     {
                         response.List.Add(task);
                     }
-                    else if (request.Q == TaskQueue.TqDoing && task.Started != null) 
+                    else if (request.Q == TaskQueue.TqDoing && task.Started != null && task.Ended == null)
                     {
                         response.List.Add(task);
                     }
-                    else if (request.Q == TaskQueue.TqTodo && task.Created != null) 
+                    else if (request.Q == TaskQueue.TqTodo && task.Created != null)
                     {
                         response.List.Add(task);
                     }
@@ -71,7 +71,24 @@ namespace GrpcServer.Services
                 {
                     if (task.Tag == (TaskPriority)request.Filter - 1)
                     {
-                        response.List.Add(task);
+                        if (request.Q != TaskQueue.TqTodo &&
+                       request.Q != TaskQueue.TqDone &&
+                       request.Q != TaskQueue.TqDoing)
+                        {
+                            response.List.Add(task);
+                        }
+                        else if (request.Q == TaskQueue.TqDone && task.Ended != null)
+                        {
+                            response.List.Add(task);
+                        }
+                        else if (request.Q == TaskQueue.TqDoing && task.Started != null && task.Ended == null)
+                        {
+                            response.List.Add(task);
+                        }
+                        else if (request.Q == TaskQueue.TqTodo && task.Created != null)
+                        {
+                            response.List.Add(task);
+                        }
                     }
                 }
             }
@@ -84,7 +101,7 @@ namespace GrpcServer.Services
         {
             var task = tasks.FirstOrDefault(t => t.Id == request.TaskId);
 
-            if (task == null)
+            if (task == null || task.Ended != null)
             {
                 return Task.FromResult(new ExecuteTaskResponse { Error = -1 });
             }
@@ -103,7 +120,7 @@ namespace GrpcServer.Services
                 return Task.FromResult(new FinalizeTaskResponse { Error = -1 });
             }
 
-            if(task.Started == null) 
+            if (task.Started == null)
             {
                 Console.WriteLine("A tarefa não foi iniciada ainda, portanto não pode ser finalizada!");
                 return Task.FromResult(new FinalizeTaskResponse { Error = -1 });
